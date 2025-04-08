@@ -44,4 +44,8 @@ def get_data():
 
     tasks = [doc.to_dict() for doc in db.collection('tasks').stream()]
 
-    return all_users_data, tasks
+    user_df = pd.DataFrame(all_users_data)
+
+    task_df = pd.DataFrame(tasks)
+
+    return user_df, task_df
