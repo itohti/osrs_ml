@@ -2,4 +2,5 @@
 # convert all percentages to actual numbers.
 # 
 def preprocess(users_df, tasks_df):
-    pass
+    print(users_df['boss_info'])
+    print(tasks_df)

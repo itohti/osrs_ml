@@ -10,6 +10,13 @@ def init_firestore():
         cred = credentials.Certificate("./secrets/caroadmap-firebase-adminsdk-fbsvc-ace27393f8.json")
         _app = firebase_admin.initialize_app(cred)
 
+def flatten_data(data):
+    flatten = {}
+    for key, value in data.items():
+        for k, v in value.items():
+            flatten[f'{key}_{k}'] = v
+    return flatten
+
 def get_data():
     init_firestore()
     db = firestore.client()
@@ -26,15 +33,21 @@ def get_data():
         for doc in boss_kc:
             boss_info_data[doc.id] = doc.to_dict()
 
+        boss_info_data = flatten_data(boss_info_data)
+
         combat_stats = db.collection("users").document(display_name).collection("combat_stats").stream()
         combat_stats_info = {}
         for doc in combat_stats:
             combat_stats_info[doc.id] = doc.to_dict()
+
+        combat_stats_info = flatten_data(combat_stats_info)
         
         tasks = db.collection("users").document(display_name).collection("tasks").stream()
         tasks_completed_info = {}
         for doc in tasks:
             tasks_completed_info[doc.id] = doc.to_dict()
+
+        tasks_completed_info = flatten_data(tasks_completed_info)
 
         user_data["boss_info"] = boss_info_data
         user_data["combat_stats"] = combat_stats_info
@@ -44,8 +57,8 @@ def get_data():
 
     tasks = [doc.to_dict() for doc in db.collection('tasks').stream()]
 
-    user_df = pd.DataFrame(all_users_data)
+    users_df = pd.DataFrame(all_users_data)
 
     task_df = pd.DataFrame(tasks)
 
-    return user_df, task_df
+    return users_df, task_df
