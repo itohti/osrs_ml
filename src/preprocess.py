@@ -36,24 +36,20 @@ def relate_user_to_task(tasks_df, users_df):
                 cleaned = [word.replace("'", "").replace(":", "").capitalize() for word in format_monster_name]
                 formatted_name = " ".join(cleaned)
 
-                # Hardcoded fixes bc some programs name bosses different things 💔
-                if monster_of_task == "Corrupted Hunllef":
-                    formatted_name = "The Corrupted Gauntlet"
-                elif monster_of_task == "Crystalline Hunllef":
-                    formatted_name = "The Gauntlet"
-                elif formatted_name == "Tombs Of Amascut Expert Mode":
-                    formatted_name = "Tombs Of Amascut Expert"
-                elif formatted_name == "The Nightmare":
-                    formatted_name = "Nightmare"
-                elif formatted_name == "Moons Of Peril":
-                    formatted_name = "Lunar Chests"
-                elif formatted_name == "Fortis Colosseum":
-                    formatted_name = "Sol Heredit"
-                elif formatted_name == "Barrows":
-                    formatted_name = "Barrows Chests"
-                elif formatted_name == "Theatre Of Blood Entry Mode":
-                    formatted_name = "Theatre Of Blood"
+                # Boss name mappings
+                boss_name_mappings = {
+                    "Corrupted Hunllef": "The Corrupted Gauntlet",
+                    "Crystalline Hunllef": "The Gauntlet",
+                    "Tombs Of Amascut Expert Mode": "Tombs Of Amascut Expert",
+                    "The Nightmare": "Nightmare",
+                    "Moons Of Peril": "Lunar Chests",
+                    "Fortis Colosseum": "Sol Heredit",
+                    "Barrows": "Barrows Chests",
+                    "Theatre Of Blood Entry Mode": "Theatre Of Blood"
+                }
 
+                # Apply boss name mapping if exists
+                formatted_name = boss_name_mappings.get(formatted_name, formatted_name)
                 kc_query = f"{formatted_name}_kc"
                 ehb_query = f"{formatted_name}_ehb"
                 kc = user["boss_info"].get(kc_query, 0)
