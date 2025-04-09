@@ -27,7 +27,7 @@ def convert_string_to_dict(users_df):
     users_df['tasks'] = users_df['tasks'].apply(ast.literal_eval)
 
 def relate_user_to_task(tasks_df, users_df):
-    users_related_tasks = {"task_name": [], "display_name": [], "attack": [], "defence": [], "strength": [], "hitpoints": [], "ranged": [], "magic": [], "prayer": [], "boss_kc": [], "ehb": [], "done": []}  
+    users_related_tasks = {"task_name": [], "display_name": [], "attack": [], "defence": [], "strength": [], "hitpoints": [], "ranged": [], "magic": [], "prayer": [], "boss_kc": [], "ehb": [], "pb": [], "done": []}  
 
     for _, user in users_df.iterrows():
         for task_key in user["tasks"].keys():
@@ -58,11 +58,13 @@ def relate_user_to_task(tasks_df, users_df):
                 formatted_name = boss_name_mappings.get(formatted_name, formatted_name)
                 kc_query = f"{formatted_name}_kc"
                 ehb_query = f"{formatted_name}_ehb"
+                pb_query = f"{formatted_name}_pb"
                 kc = user["boss_info"].get(kc_query, -2)
                 # if we successfully got the kc back and if its -1 that means the user did 0 kills.
                 if (kc == -1):
                     kc = 0
                 ehb = user["boss_info"].get(ehb_query, 0)
+                pb = user["boss_info"].get(pb_query, -1)
 
                 # -2 will indicate that the monster is an npc thus no kc can be recorded on it.
                 if kc == -2 and ehb == 0:
@@ -73,12 +75,15 @@ def relate_user_to_task(tasks_df, users_df):
                     elif (kc == -2):
                         kc = -1
                     ehb = user["boss_info"].get(f"{formatted_name}_ehb", 0)
+                    pb = user["boss_info"].get(f"{formatted_name}_pb", -1)
 
                 users_related_tasks["boss_kc"].append(kc)
                 users_related_tasks["ehb"].append(ehb)
+                users_related_tasks["pb"].append(pb)
             else:
                 users_related_tasks["boss_kc"].append(-1)
                 users_related_tasks["ehb"].append(0)
+                users_related_tasks["pb"].append(-1)
 
             users_related_tasks["display_name"].append(user["display_name"])
 
