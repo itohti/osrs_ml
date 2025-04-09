@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 import ast
 
 def preprocess(users_df, tasks_df):
@@ -7,10 +8,15 @@ def preprocess(users_df, tasks_df):
 
     convert_comp_percentage(tasks_df)
     convert_string_to_dict(users_df)
-    relate_user_to_task_df = relate_user_to_task(tasks_df, users_df)
-    relate_user_to_task_df.to_csv("./saved_data/users_related_to_task.csv")
-    print(users_df)
-    print(tasks_df)
+    task_to_users = relate_user_to_task(tasks_df, users_df)
+    task_to_users = feature_engineering(users_df, tasks_df, task_to_users)
+    task_to_users.to_csv("./saved_data/tasks_to_users.csv")
+
+def feature_engineering(users_df, tasks_df, task_to_users):
+    # kills remaining feature
+    task_to_users = kills_remaining_feature(task_to_users, tasks_df)
+
+    return task_to_users
 
 def convert_comp_percentage(tasks_df):
     tasks_df["comp"] = tasks_df["comp"].str.rstrip('%').astype(float) / 100
@@ -52,18 +58,26 @@ def relate_user_to_task(tasks_df, users_df):
                 formatted_name = boss_name_mappings.get(formatted_name, formatted_name)
                 kc_query = f"{formatted_name}_kc"
                 ehb_query = f"{formatted_name}_ehb"
-                kc = user["boss_info"].get(kc_query, 0)
+                kc = user["boss_info"].get(kc_query, -2)
+                # if we sucessfully got the kc back and if its -1 that means the user did 0 kills.
+                if (kc == -1):
+                    kc = 0
                 ehb = user["boss_info"].get(ehb_query, 0)
 
-                if kc == 0 and ehb == 0:
+                # -2 will indicate that the monster is an npc thus no kc can be recorded on it.
+                if kc == -2 and ehb == 0:
                     formatted_name = f"The {formatted_name}"
-                    kc = user["boss_info"].get(f"{formatted_name}_kc", 0)
+                    kc = user["boss_info"].get(f"{formatted_name}_kc", -2)
+                    if (kc == -1):
+                        kc = 0
+                    elif (kc == -2):
+                        kc = -1
                     ehb = user["boss_info"].get(f"{formatted_name}_ehb", 0)
 
                 users_related_tasks["boss_kc"].append(kc)
                 users_related_tasks["ehb"].append(ehb)
             else:
-                users_related_tasks["boss_kc"].append(0)
+                users_related_tasks["boss_kc"].append(-1)
                 users_related_tasks["ehb"].append(0)
 
             users_related_tasks["display_name"].append(user["display_name"])
@@ -75,5 +89,34 @@ def relate_user_to_task(tasks_df, users_df):
     df = pd.DataFrame(users_related_tasks)
     return df
 
-def kill_count_task_progress(users_df, tasks_df):
-    pass
+def kills_remaining_feature(task_to_users, tasks_df):
+    kill_counts_tasks = tasks_df.loc[tasks_df["type"] == "Kill Count"]
+
+    kill_counts_description = dict(zip(kill_counts_tasks["name"], kill_counts_tasks["description"]))
+
+    def compute_kills_remaining(row):
+        task_name = row["task_name"]
+        done = row["done"]
+        if done:
+            return 0
+        if row["boss_kc"] == -1:
+            # idk what to return here if the value is -1 then we cant get data on how many the player killed.
+            # inferring 1 kc is needed?
+            return 1
+        else:
+            if task_name in kill_counts_description:
+                # extract the amount needed
+                description = kill_counts_description[task_name]
+                if re.search(r"\bonce\b", description, re.IGNORECASE):
+                    return max(1 - row["boss_kc"], 0)
+                match = re.search(r"(\d+)\s+times?", description, re.IGNORECASE)
+                if match:
+                    return max(int(match.group(1)) - row["boss_kc"], 0)
+                if re.search(r"\bKill a\b", description, re.IGNORECASE):
+                    return max(1 - row["boss_kc"], 0)
+                
+                # maybe just infer 1 kc is needed?
+                return 1
+    
+    task_to_users["kills_remaining"] = task_to_users.apply(compute_kills_remaining, axis=1)
+    return task_to_users
