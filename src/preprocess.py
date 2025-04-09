@@ -59,7 +59,7 @@ def relate_user_to_task(tasks_df, users_df):
                 kc_query = f"{formatted_name}_kc"
                 ehb_query = f"{formatted_name}_ehb"
                 kc = user["boss_info"].get(kc_query, -2)
-                # if we sucessfully got the kc back and if its -1 that means the user did 0 kills.
+                # if we successfully got the kc back and if its -1 that means the user did 0 kills.
                 if (kc == -1):
                     kc = 0
                 ehb = user["boss_info"].get(ehb_query, 0)
