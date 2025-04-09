@@ -15,7 +15,7 @@ def preprocess(users_df, tasks_df):
 def feature_engineering(users_df, tasks_df, task_to_users):
     # kills remaining feature
     task_to_users = kills_remaining_feature(task_to_users, tasks_df)
-
+    task_to_users = seconds_remaining_feature(task_to_users, tasks_df)
     return task_to_users
 
 def convert_comp_percentage(tasks_df):
@@ -119,11 +119,71 @@ def kills_remaining_feature(task_to_users, tasks_df):
                 return max(int(match.group(1)) - row["boss_kc"], 0)
             if re.search(r"\bKill a\b", description, re.IGNORECASE):
                 return max(1 - row["boss_kc"], 0)
+            if re.search(r"\bKill the\b", description, re.IGNORECASE):
+                return max(1 - row["boss_kc"], 0)
+            # lol hard coded jankkkkk
+            if description == "Open the Reward Chest after defeating all three Moons.":
+                return max(1 - row["boss_kc"], 0)
             
             # maybe just infer 1 kc is needed?
             return 1
         else:
             return None
+        
+    def compute_progress_ratio(row):
+        if (row["boss_kc"] + row["kills_remaining"] == 0):
+            return 0
+        return row["boss_kc"] / (row["boss_kc"] + row["kills_remaining"])
     
     task_to_users["kills_remaining"] = task_to_users.apply(compute_kills_remaining, axis=1)
+    task_to_users["kills_remaining_progress_ratio"] = task_to_users.apply(compute_progress_ratio, axis=1)
+    return task_to_users
+
+def seconds_remaining_feature(task_to_users, tasks_df):
+    speed_running_tasks = tasks_df.loc[tasks_df["type"] == "Speed"]
+    speed_running_description = dict(zip(speed_running_tasks["name"], speed_running_tasks["description"]))
+
+    def compute_seconds_to_save(row):
+        task_name = row["task_name"]
+        if task_name in speed_running_description:
+            def get_time(description):
+                min_to_sec = 0
+                secs = 0
+                match_minutes = re.search(r"(\d+)\s+minutes?", description, re.IGNORECASE)
+                match_minute = re.search(r"(\d+)\s+minute?", description, re.IGNORECASE)
+                if match_minutes:
+                    min_to_sec = int(match_minutes.group(1)) * 60
+                if match_minute:
+                    min_to_sec = int(match_minute.group(1)) * 60
+                match_seconds = re.search(r"(\d+)\s+seconds?", description, re.IGNORECASE)
+                if match_seconds:
+                    secs = int(match_seconds.group(1))
+                match_time_format = re.search(r"(\d+):(\d+)", description, re.IGNORECASE)
+                if match_time_format:
+                    min_to_sec = int(match_time_format.group(1)) * 60
+                    secs = int(match_time_format.group(2))
+                # Hard coded jankkkkkkkkkkk
+                if description == "Complete a Chambers of Xeric Challenge mode raid in the target time.":
+                    return 50 * 60 # just assume they're running a 3 man CM
+                return min_to_sec + secs
+
+
+            target_time = get_time(speed_running_description[task_name])
+            # this mean that the player does not have a recorded time
+            if row["pb"] == -1:
+                return target_time
+            return row["pb"] - target_time
+        
+    def compute_progress_ratio(row):
+        pb = row["pb"]
+        if (pb == -1):
+            pb = 0
+        if (pb + row["seconds_to_save"] == 0):
+            return 1
+        else:
+            return min(pb / (pb + row["seconds_to_save"]), 1)
+
+    
+    task_to_users["seconds_to_save"] = task_to_users.apply(compute_seconds_to_save, axis=1)
+    task_to_users["speed_progress_ratio"] = task_to_users.apply(compute_progress_ratio, axis=1)
     return task_to_users
