@@ -97,26 +97,28 @@ def kills_remaining_feature(task_to_users, tasks_df):
     def compute_kills_remaining(row):
         task_name = row["task_name"]
         done = row["done"]
-        if done:
-            return 0
-        if row["boss_kc"] == -1:
-            # idk what to return here if the value is -1 then we cant get data on how many the player killed.
-            # inferring 1 kc is needed?
+        if task_name in kill_counts_description:
+            if row["boss_kc"] == -1:
+                # infer the player only needs to kill one
+                if done:
+                    return 0
+                else:
+                    return 1
+            
+            # extract the amount needed
+            description = kill_counts_description[task_name]
+            if re.search(r"\bonce\b", description, re.IGNORECASE):
+                return max(1 - row["boss_kc"], 0)
+            match = re.search(r"(\d+)\s+times?", description, re.IGNORECASE)
+            if match:
+                return max(int(match.group(1)) - row["boss_kc"], 0)
+            if re.search(r"\bKill a\b", description, re.IGNORECASE):
+                return max(1 - row["boss_kc"], 0)
+            
+            # maybe just infer 1 kc is needed?
             return 1
         else:
-            if task_name in kill_counts_description:
-                # extract the amount needed
-                description = kill_counts_description[task_name]
-                if re.search(r"\bonce\b", description, re.IGNORECASE):
-                    return max(1 - row["boss_kc"], 0)
-                match = re.search(r"(\d+)\s+times?", description, re.IGNORECASE)
-                if match:
-                    return max(int(match.group(1)) - row["boss_kc"], 0)
-                if re.search(r"\bKill a\b", description, re.IGNORECASE):
-                    return max(1 - row["boss_kc"], 0)
-                
-                # maybe just infer 1 kc is needed?
-                return 1
+            return None
     
     task_to_users["kills_remaining"] = task_to_users.apply(compute_kills_remaining, axis=1)
     return task_to_users
