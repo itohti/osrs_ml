@@ -1,6 +1,7 @@
 import pandas as pd
 import re
 import ast
+from sklearn.preprocessing import StandardScaler
 
 def preprocess(users_df, tasks_df):
     # users_df.to_csv('./saved_data/users.csv')
@@ -17,8 +18,8 @@ def preprocess(users_df, tasks_df):
 
 def feature_engineering(merged_df):
     # kills remaining feature
-    merged_df = kills_remaining_feature(merged_df)
-    merged_df = seconds_remaining_feature(merged_df)
+    merged_df = kills_feature(merged_df)
+    merged_df = speed_feature(merged_df)
     merged_df = merge_progress_ratio(merged_df)
     return merged_df
 
@@ -98,7 +99,7 @@ def relate_user_to_task(tasks_df, users_df):
     df = pd.DataFrame(users_related_tasks)
     return df
 
-def kills_remaining_feature(merged_df):
+def kills_feature(merged_df):
     kill_counts_tasks = merged_df.loc[merged_df["type"] == "Kill Count"]
 
     kill_counts_description = dict(zip(kill_counts_tasks["name"], kill_counts_tasks["description"]))
@@ -143,7 +144,7 @@ def kills_remaining_feature(merged_df):
     merged_df["kills_remaining_progress_ratio"] = merged_df.apply(compute_progress_ratio, axis=1)
     return merged_df
 
-def seconds_remaining_feature(merged_df):
+def speed_feature(merged_df):
     speed_running_tasks = merged_df.loc[merged_df["type"] == "Speed"]
     speed_running_description = dict(zip(speed_running_tasks["name"], speed_running_tasks["description"]))
 
@@ -186,10 +187,17 @@ def seconds_remaining_feature(merged_df):
             return 1
         else:
             return min(pb / (pb + row["seconds_to_save"]), 1)
+        
+    def compute_seconds_to_save_per_ehb(row):
+        return row["seconds_to_save"] / (row["ehb"] + 0.000001)
 
     
     merged_df["seconds_to_save"] = merged_df.apply(compute_seconds_to_save, axis=1)
     merged_df["speed_progress_ratio"] = merged_df.apply(compute_progress_ratio, axis=1)
+    merged_df["potential_to_save_time"] = merged_df.apply(compute_seconds_to_save_per_ehb, axis=1)
+
+    scaler = StandardScaler()
+    merged_df["potential_to_save_time"] = scaler.fit_transform(merged_df[["potential_to_save_time"]])
     return merged_df
 
 def merge_progress_ratio(merged_df):
