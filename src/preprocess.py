@@ -9,17 +9,16 @@ def preprocess(users_df, tasks_df):
     convert_comp_percentage(tasks_df)
     convert_string_to_dict(users_df)
     task_to_users = relate_user_to_task(tasks_df, users_df)
-    task_to_users = feature_engineering(users_df, tasks_df, task_to_users)
     task_to_users.to_csv("./saved_data/tasks_to_users.csv")
     merged_df = task_to_users.merge(tasks_df, left_on='task_name', right_on='name', how='left')
     merged_df.to_csv("./saved_data/merged_df.csv")
 
 
-def feature_engineering(users_df, tasks_df, task_to_users):
+def feature_engineering(merged_df):
     # kills remaining feature
-    task_to_users = kills_remaining_feature(task_to_users, tasks_df)
-    task_to_users = seconds_remaining_feature(task_to_users, tasks_df)
-    return task_to_users
+    merged_df = kills_remaining_feature(merged_df)
+    merged_df = seconds_remaining_feature(merged_df)
+    return merged_df
 
 def convert_comp_percentage(tasks_df):
     tasks_df["comp"] = tasks_df["comp"].str.rstrip('%').astype(float) / 100
@@ -97,8 +96,8 @@ def relate_user_to_task(tasks_df, users_df):
     df = pd.DataFrame(users_related_tasks)
     return df
 
-def kills_remaining_feature(task_to_users, tasks_df):
-    kill_counts_tasks = tasks_df.loc[tasks_df["type"] == "Kill Count"]
+def kills_remaining_feature(merged_df):
+    kill_counts_tasks = merged_df.loc[merged_df["type"] == "Kill Count"]
 
     kill_counts_description = dict(zip(kill_counts_tasks["name"], kill_counts_tasks["description"]))
 
@@ -138,12 +137,12 @@ def kills_remaining_feature(task_to_users, tasks_df):
             return 0
         return row["boss_kc"] / (row["boss_kc"] + row["kills_remaining"])
     
-    task_to_users["kills_remaining"] = task_to_users.apply(compute_kills_remaining, axis=1)
-    task_to_users["kills_remaining_progress_ratio"] = task_to_users.apply(compute_progress_ratio, axis=1)
-    return task_to_users
+    merged_df["kills_remaining"] = merged_df.apply(compute_kills_remaining, axis=1)
+    merged_df["kills_remaining_progress_ratio"] = merged_df.apply(compute_progress_ratio, axis=1)
+    return merged_df
 
-def seconds_remaining_feature(task_to_users, tasks_df):
-    speed_running_tasks = tasks_df.loc[tasks_df["type"] == "Speed"]
+def seconds_remaining_feature(merged_df):
+    speed_running_tasks = merged_df.loc[merged_df["type"] == "Speed"]
     speed_running_description = dict(zip(speed_running_tasks["name"], speed_running_tasks["description"]))
 
     def compute_seconds_to_save(row):
@@ -187,6 +186,6 @@ def seconds_remaining_feature(task_to_users, tasks_df):
             return min(pb / (pb + row["seconds_to_save"]), 1)
 
     
-    task_to_users["seconds_to_save"] = task_to_users.apply(compute_seconds_to_save, axis=1)
-    task_to_users["speed_progress_ratio"] = task_to_users.apply(compute_progress_ratio, axis=1)
-    return task_to_users
+    merged_df["seconds_to_save"] = merged_df.apply(compute_seconds_to_save, axis=1)
+    merged_df["speed_progress_ratio"] = merged_df.apply(compute_progress_ratio, axis=1)
+    return merged_df
