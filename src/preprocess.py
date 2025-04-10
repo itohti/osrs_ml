@@ -18,6 +18,7 @@ def feature_engineering(merged_df):
     # kills remaining feature
     merged_df = kills_remaining_feature(merged_df)
     merged_df = seconds_remaining_feature(merged_df)
+    merged_df = merge_progress_ratio(merged_df)
     return merged_df
 
 def convert_comp_percentage(tasks_df):
@@ -188,4 +189,10 @@ def seconds_remaining_feature(merged_df):
     
     merged_df["seconds_to_save"] = merged_df.apply(compute_seconds_to_save, axis=1)
     merged_df["speed_progress_ratio"] = merged_df.apply(compute_progress_ratio, axis=1)
+    return merged_df
+
+def merge_progress_ratio(merged_df):
+    merged_df["progress_ratio"] = merged_df["kills_remaining_progress_ratio"].combine_first(merged_df["speed_progress_ratio"])
+    merged_df.drop(["kills_remaining_progress_ratio", "speed_progress_ratio"], axis=1, inplace=True)
+
     return merged_df
