@@ -11,7 +11,8 @@ def preprocess(users_df, tasks_df):
     task_to_users = relate_user_to_task(tasks_df, users_df)
     task_to_users.to_csv("./saved_data/tasks_to_users.csv")
     merged_df = task_to_users.merge(tasks_df, left_on='task_name', right_on='name', how='left')
-    merged_df.to_csv("./saved_data/merged_df.csv")
+    merged_df = merged_df.drop(columns=["Unnamed: 0"], errors='ignore')
+    merged_df.to_csv("./saved_data/merged_df.csv", index=False)
 
 
 def feature_engineering(merged_df):
