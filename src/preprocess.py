@@ -11,6 +11,9 @@ def preprocess(users_df, tasks_df):
     task_to_users = relate_user_to_task(tasks_df, users_df)
     task_to_users = feature_engineering(users_df, tasks_df, task_to_users)
     task_to_users.to_csv("./saved_data/tasks_to_users.csv")
+    merged_df = task_to_users.merge(tasks_df, left_on='task_name', right_on='name', how='left')
+    merged_df.to_csv("./saved_data/merged_df.csv")
+
 
 def feature_engineering(users_df, tasks_df, task_to_users):
     # kills remaining feature
