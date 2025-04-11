@@ -170,6 +170,8 @@ def speed_feature(merged_df):
                 # Hard coded jankkkkkkkkkkk
                 if description == "Complete a Chambers of Xeric Challenge mode raid in the target time.":
                     return 50 * 60 # just assume they're running a 3 man CM
+                if description == "Complete the Theatre of Blood: Hard Mode within the challenge time.":
+                    return 27 * 60 # assuming they're running a 4 man
                 return min_to_sec + secs
 
 
