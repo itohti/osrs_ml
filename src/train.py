@@ -53,8 +53,6 @@ def get_points(player_name: str):
     total_points = 0
     for _,row in done_df.iterrows():
         total_points += row["tier"]
-
-    print(total_points)
     
     return total_points
 
