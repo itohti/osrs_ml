@@ -21,6 +21,8 @@ def feature_engineering(merged_df):
     merged_df = kills_feature(merged_df)
     merged_df = speed_feature(merged_df)
     merged_df = merge_progress_ratio(merged_df)
+    merged_df["time_to_kill"] = merged_df.apply(lambda row: row["ehb"] / (row["boss_kc"] + 0.00001), axis=1)
+    merged_df["time_to_completion"] = merged_df.apply(lambda row: row["time_to_kill"] * row["kills_remaining"], axis=1)
     return merged_df
 
 def convert_comp_percentage(tasks_df):
