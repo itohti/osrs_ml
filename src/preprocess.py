@@ -158,10 +158,16 @@ def speed_feature(merged_df):
                 secs = 0
                 match_minutes = re.search(r"(\d+)\s+minutes?", description, re.IGNORECASE)
                 match_minute = re.search(r"(\d+)\s+minute?", description, re.IGNORECASE)
+                match_mins = re.search(r"(\d+)\s+mins?", description, re.IGNORECASE)
+                match_min = re.search(r"(\d+)\s+min?", description, re.IGNORECASE)
                 if match_minutes:
                     min_to_sec = int(match_minutes.group(1)) * 60
                 if match_minute:
                     min_to_sec = int(match_minute.group(1)) * 60
+                if match_mins:
+                    min_to_sec = int(match_mins.group(1)) * 60
+                if match_min:
+                    min_to_sec = int(match_min.group(1)) * 60
                 match_seconds = re.search(r"(\d+)\s+seconds?", description, re.IGNORECASE)
                 if match_seconds:
                     secs = int(match_seconds.group(1))
