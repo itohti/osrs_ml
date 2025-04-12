@@ -8,7 +8,8 @@ def main():
     tasks = pd.read_csv('./saved_data/tasks.csv')
     preprocess.preprocess(users, tasks)
 
-    train.classification_model("Him-alayan")
+    train.recommend_tasks_by_score("Him-alayan", 1014).to_csv("./saved_data/recommended_tasks.csv")
+
 
 
 if __name__ == "__main__":

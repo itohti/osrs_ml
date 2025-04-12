@@ -47,6 +47,46 @@ def classification_model(player_name=None):
     for feature, coef in zip(features, model.coef_[0]):
         print(f"{feature}: {coef:.4f}")
 
+def get_points(player_name: str):
+    df = pd.read_csv("./saved_data/merged_df.csv")
+    done_df = df[(df["done"].astype(bool).astype(int) == 1) & (df["display_name"] == player_name)]
+    total_points = 0
+    for _,row in done_df.iterrows():
+        total_points += row["tier"]
+    
+    return total_points
+
+def recommend_tasks_by_score(player_name: str, point_threshold: int, filepath: str = "./saved_data/merged_df.csv"):
+    df = pd.read_csv(filepath)
+    df = preprocess.feature_engineering(df)
+
+    player_df = df[(df["display_name"] == player_name) & (df["done"] == 0)].copy()
+
+    player_df["progress_ratio"] = player_df["progress_ratio"].fillna(0)
+    player_df["potential_to_save_time"] = player_df["potential_to_save_time"].fillna(0)
+    player_df["kills_remaining"] = player_df["kills_remaining"].fillna(1) 
+
+    player_df["estimated_time"] = player_df["time_to_kill"] * player_df["kills_remaining"]
+   
+    player_df["score"] = (
+        player_df["progress_ratio"] * (player_df["tier"] + player_df["comp"])
+        / (player_df["estimated_time"] + 1)
+    )
+
+    player_df = player_df.sort_values("score", ascending=False)
+
+    selected_tasks = []
+    accumulated_points = get_points(player_name)
+
+    for _, row in player_df.iterrows():
+        if accumulated_points >= point_threshold:
+            break
+        selected_tasks.append(row)
+        accumulated_points += row["tier"]
+
+    result_df = pd.DataFrame(selected_tasks)
+    return result_df[["task_name", "description", "tier", "score", "progress_ratio", "kills_remaining", "estimated_time"]]
+
     
 
     
