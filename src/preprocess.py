@@ -126,7 +126,7 @@ def perfect_mechanical_stamina_feature(merged_df):
     def compute_readiness(row):
         task_name = row["task_name"]
         if task_name in tasks_to_comp:
-            return row["ehb"] * (tasks_to_comp[task_name] ** 1.5)
+            return row["ehb"] * tasks_to_comp[task_name]
         
     merged_df["readiness"] = merged_df.apply(compute_readiness, axis=1)
 
@@ -184,6 +184,8 @@ def speed_feature(merged_df):
     def compute_seconds_to_save(row):
         task_name = row["task_name"]
         if task_name in speed_running_description:
+            if row["done"] == True:
+                return 0
             def get_time(description):
                 min_to_sec = 0
                 secs = 0
