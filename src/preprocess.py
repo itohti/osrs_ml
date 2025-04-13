@@ -1,8 +1,9 @@
 from matplotlib import axes
+import numpy as np
 import pandas as pd
 import re
 import ast
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 AWAKENED_TASKS = [
     "Duke Sucellus Sleeper",
@@ -29,7 +30,7 @@ def feature_engineering(merged_df):
     # kills remaining feature
     merged_df = kills_feature(merged_df)
     merged_df = speed_feature(merged_df)
-    merged_df = perfect_mechanical_feature(merged_df)
+    merged_df = perfect_mechanical_stamina_feature(merged_df)
     merged_df = merge_progress_ratio(merged_df)
     merged_df["time_to_kill"] = merged_df.apply(lambda row: row["ehb"] / (row["boss_kc"] + 0.00001), axis=1)
     merged_df["time_to_completion"] = merged_df.apply(lambda row: row["time_to_kill"] * row["kills_remaining"], axis=1)
@@ -111,10 +112,10 @@ def relate_user_to_task(tasks_df, users_df):
     df = pd.DataFrame(users_related_tasks)
     return df
 
-def perfect_mechanical_feature(merged_df):
+def perfect_mechanical_stamina_feature(merged_df):
     # Tasks that are either labeled as Perfection/Mechanical or are special cases
     is_relevant = (
-        merged_df["type"].isin(["Perfection", "Mechanical"]) |
+        merged_df["type"].isin(["Perfection", "Mechanical", "Stamina"]) |
         merged_df["task_name"].isin(AWAKENED_TASKS)
     )
     
@@ -235,9 +236,17 @@ def speed_feature(merged_df):
     merged_df["seconds_to_save"] = merged_df.apply(compute_seconds_to_save, axis=1)
     merged_df["speed_progress_ratio"] = merged_df.apply(compute_progress_ratio, axis=1)
     merged_df["potential_to_save_time"] = merged_df.apply(compute_seconds_to_save_per_ehb, axis=1)
+    clip_upper = merged_df["potential_to_save_time"].quantile(0.95)
+    merged_df["potential_to_save_time"] = merged_df["potential_to_save_time"].clip(lower=0, upper=clip_upper)
 
-    scaler = StandardScaler()
-    merged_df["potential_to_save_time"] = scaler.fit_transform(merged_df[["potential_to_save_time"]])
+    speed_mask = merged_df["type"] == "Speed"
+    scaler = MinMaxScaler()
+
+    scaled_values = scaler.fit_transform(
+        merged_df.loc[speed_mask, "potential_to_save_time"].values.reshape(-1, 1)
+    )
+
+    merged_df.loc[speed_mask, "potential_to_save_time"] = scaled_values
     return merged_df
 
 def merge_progress_ratio(merged_df):

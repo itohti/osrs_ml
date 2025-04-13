@@ -81,17 +81,21 @@ def recommend_tasks_by_score(player_name: str, point_threshold: int, filepath: s
     def score_task(row):
         if ((row["type"] == "Kill Count") or (row["type"] == "Speed")) and (row["task_name"] not in AWAKENED_TASKS):
             progress_weight = 1
-            if row["progress_ratio"] < 0.85 and row["type"] == "Speed":
-                progress_weight = 0.5
-            return (row["progress_ratio"] * progress_weight) * (row["comp"] + row["tier"] * 0.5) / (row["estimated_time"] + 1)
-        elif (row["type"] == "Perfection") or (row["type"] == "Mechanical") or (row["task_name"] in AWAKENED_TASKS):
+            if row["type"] == "Speed":
+                if row["progress_ratio"] <= 0.85:
+                    progress_weight = (0.5 * row["potential_to_save_time"])
+                else:
+                    progress_weight = row["potential_to_save_time"]
+            return (row["progress_ratio"] * progress_weight) * (row["comp"] + row["tier"] * 0.5) / ((row["estimated_time"] * 2) + 1)
+        elif (row["type"] == "Perfection") or (row["type"] == "Mechanical") or (row["type"] == "Stamina") or (row["task_name"] in AWAKENED_TASKS):
             return row["readiness"] * (row["tier"])
         else:
             return 0
 
     player_df["score"] = player_df.apply(score_task, axis=1)
-    scaler = MinMaxScaler()
-    player_df[["score"]] = scaler.fit_transform(player_df[["score"]])
+    player_df["score"] = player_df.groupby("type")["score"].transform(
+        lambda x: MinMaxScaler().fit_transform(x.values.reshape(-1, 1)).flatten()
+    )
 
     player_df = player_df.sort_values("score", ascending=False)
 
@@ -105,7 +109,7 @@ def recommend_tasks_by_score(player_name: str, point_threshold: int, filepath: s
         accumulated_points += row["tier"]
 
     result_df = pd.DataFrame(selected_tasks)
-    return result_df[["task_name", "description", "monster", "tier", "type", "score"]]
+    return result_df[["task_name", "description", "monster", "tier", "type", "score", "kills_remaining", "seconds_to_save"]]
 
     
 
