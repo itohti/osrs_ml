@@ -1,3 +1,4 @@
+from matplotlib import axes
 import pandas as pd
 import re
 import ast
@@ -20,6 +21,7 @@ def feature_engineering(merged_df):
     # kills remaining feature
     merged_df = kills_feature(merged_df)
     merged_df = speed_feature(merged_df)
+    merged_df = perfect_mechanical_feature(merged_df)
     merged_df = merge_progress_ratio(merged_df)
     merged_df["time_to_kill"] = merged_df.apply(lambda row: row["ehb"] / (row["boss_kc"] + 0.00001), axis=1)
     merged_df["time_to_completion"] = merged_df.apply(lambda row: row["time_to_kill"] * row["kills_remaining"], axis=1)
@@ -100,6 +102,20 @@ def relate_user_to_task(tasks_df, users_df):
 
     df = pd.DataFrame(users_related_tasks)
     return df
+
+def perfect_mechanical_feature(merged_df):
+    perfect_mechanical_tasks = merged_df.loc[(merged_df["type"] == "Perfection") | (merged_df["type"] == "Mechanical")]
+
+    tasks_to_comp = dict(zip(perfect_mechanical_tasks["name"], perfect_mechanical_tasks["comp"]))
+
+    def compute_readiness(row):
+        task_name = row["task_name"]
+        if task_name in tasks_to_comp:
+            return row["ehb"] * tasks_to_comp[task_name]
+        
+    merged_df["readiness"] = merged_df.apply(compute_readiness, axis=1)
+
+    return merged_df
 
 def kills_feature(merged_df):
     kill_counts_tasks = merged_df.loc[merged_df["type"] == "Kill Count"]
