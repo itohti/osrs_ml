@@ -4,6 +4,14 @@ import re
 import ast
 from sklearn.preprocessing import StandardScaler
 
+AWAKENED_TASKS = [
+    "Duke Sucellus Sleeper",
+    "Whispered",
+    "Leviathan Sleeper",
+    "Vardorvis Sleeper"
+]
+
+
 def preprocess(users_df, tasks_df):
     # users_df.to_csv('./saved_data/users.csv')
     # tasks_df.to_csv('./saved_data/tasks.csv')
@@ -104,7 +112,13 @@ def relate_user_to_task(tasks_df, users_df):
     return df
 
 def perfect_mechanical_feature(merged_df):
-    perfect_mechanical_tasks = merged_df.loc[(merged_df["type"] == "Perfection") | (merged_df["type"] == "Mechanical")]
+    # Tasks that are either labeled as Perfection/Mechanical or are special cases
+    is_relevant = (
+        merged_df["type"].isin(["Perfection", "Mechanical"]) |
+        merged_df["task_name"].isin(AWAKENED_TASKS)
+    )
+    
+    perfect_mechanical_tasks = merged_df[is_relevant]
 
     tasks_to_comp = dict(zip(perfect_mechanical_tasks["name"], perfect_mechanical_tasks["comp"]))
 
