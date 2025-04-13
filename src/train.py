@@ -83,7 +83,7 @@ def recommend_tasks_by_score(player_name: str, point_threshold: int, filepath: s
             progress_weight = 1
             if row["progress_ratio"] < 0.85 and row["type"] == "Speed":
                 progress_weight = 0.5
-            return (row["progress_ratio"] * progress_weight) * (row["tier"] + row["comp"]) / (row["estimated_time"] + 1)
+            return (row["progress_ratio"] * progress_weight) * (row["comp"] + row["tier"] * 0.5) / (row["estimated_time"] + 1)
         elif (row["type"] == "Perfection") or (row["type"] == "Mechanical") or (row["task_name"] in AWAKENED_TASKS):
             return row["readiness"] * (row["tier"])
         else:
@@ -105,7 +105,7 @@ def recommend_tasks_by_score(player_name: str, point_threshold: int, filepath: s
         accumulated_points += row["tier"]
 
     result_df = pd.DataFrame(selected_tasks)
-    return result_df[["task_name", "description", "monster", "tier", "score", "progress_ratio", "kills_remaining", "estimated_time"]]
+    return result_df[["task_name", "description", "monster", "tier", "type", "score"]]
 
     
 

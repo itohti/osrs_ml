@@ -125,7 +125,7 @@ def perfect_mechanical_feature(merged_df):
     def compute_readiness(row):
         task_name = row["task_name"]
         if task_name in tasks_to_comp:
-            return row["ehb"] * tasks_to_comp[task_name]
+            return row["ehb"] * (tasks_to_comp[task_name] ** 1.5)
         
     merged_df["readiness"] = merged_df.apply(compute_readiness, axis=1)
 
