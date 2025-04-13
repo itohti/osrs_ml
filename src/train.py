@@ -70,11 +70,22 @@ def recommend_tasks_by_score(player_name: str, point_threshold: int, filepath: s
     player_df["readiness"] = player_df["readiness"].fillna(0)
 
     player_df["estimated_time"] = player_df["time_to_kill"] * player_df["kills_remaining"]
+
+    AWAKENED_TASKS = [
+        "Duke Sucellus Sleeper",
+        "Whispered",
+        "Leviathan Sleeper",
+        "Vardorvis Sleeper"
+    ]
+
     def score_task(row):
-        if (row["type"] == "Kill Count") or (row["type"] == "Speed"):
-            return row["progress_ratio"] * (row["tier"] + row["comp"]) / (row["estimated_time"] + 1)
-        elif (row["type"] == "Perfection") or (row["type"] == "Mechanical"):
-            return row["readiness"] * row["tier"]
+        if ((row["type"] == "Kill Count") or (row["type"] == "Speed")) and (row["task_name"] not in AWAKENED_TASKS):
+            progress_weight = 1
+            if row["progress_ratio"] < 0.85 and row["type"] == "Speed":
+                progress_weight = 0.5
+            return (row["progress_ratio"] * progress_weight) * (row["tier"] + row["comp"]) / (row["estimated_time"] + 1)
+        elif (row["type"] == "Perfection") or (row["type"] == "Mechanical") or (row["task_name"] in AWAKENED_TASKS):
+            return row["readiness"] * (row["tier"])
         else:
             return 0
 
@@ -94,7 +105,7 @@ def recommend_tasks_by_score(player_name: str, point_threshold: int, filepath: s
         accumulated_points += row["tier"]
 
     result_df = pd.DataFrame(selected_tasks)
-    return result_df[["task_name", "description", "tier", "score", "progress_ratio", "kills_remaining", "estimated_time"]]
+    return result_df[["task_name", "description", "monster", "tier", "score", "progress_ratio", "kills_remaining", "estimated_time"]]
 
     
 
