@@ -65,6 +65,9 @@ def recommend_tasks_by_score(player_name: str, point_threshold: int, filepath: s
         "Leviathan Sleeper",
         "Vardorvis Sleeper"
     ]
+
+    player_df = player_df[player_df["slayer_gap"] >= 0]
+
     def score_task(row):
         if ((row["type"] == "Kill Count") or (row["type"] == "Speed")) and (row["task_name"] not in AWAKENED_TASKS):
             return (row["progress_ratio"] * row["tier"] / (row["estimated_time"] + 1)) * row["could_complete_score"]
