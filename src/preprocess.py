@@ -34,6 +34,7 @@ def feature_engineering(merged_df):
     merged_df = merge_progress_ratio(merged_df)
     merged_df["time_to_kill"] = merged_df.apply(lambda row: row["ehb"] / (row["boss_kc"] + 0.00001), axis=1)
     merged_df["time_to_completion"] = merged_df.apply(lambda row: row["time_to_kill"] * row["kills_remaining"], axis=1)
+    merged_df["slayer_gap"] = merged_df.apply(lambda row: row["slayer"] - row["slayerReq"], axis=1)
     return merged_df
 
 def convert_comp_percentage(tasks_df):
@@ -45,7 +46,7 @@ def convert_string_to_dict(users_df):
     users_df['tasks'] = users_df['tasks'].apply(ast.literal_eval)
 
 def relate_user_to_task(tasks_df, users_df):
-    users_related_tasks = {"task_name": [], "display_name": [], "attack": [], "defence": [], "strength": [], "hitpoints": [], "ranged": [], "magic": [], "prayer": [], "boss_kc": [], "ehb": [], "pb": [], "done": []}  
+    users_related_tasks = {"task_name": [], "display_name": [], "attack": [], "defence": [], "strength": [], "hitpoints": [], "ranged": [], "magic": [], "slayer": [], "prayer": [], "boss_kc": [], "ehb": [], "pb": [], "done": []}  
 
     for _, user in users_df.iterrows():
         for task_key in user["tasks"].keys():
