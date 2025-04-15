@@ -34,7 +34,6 @@ def feature_engineering(merged_df):
     merged_df = merge_progress_ratio(merged_df)
     merged_df["time_to_kill"] = merged_df.apply(lambda row: row["ehb"] / (row["boss_kc"] + 0.00001), axis=1)
     merged_df["time_to_completion"] = merged_df.apply(lambda row: row["time_to_kill"] * row["kills_remaining"], axis=1)
-    merged_df["is_slayer_boss"] = merged_df.apply(lambda row: row["slayerReq"] > 0, axis=1)
     merged_df["slayer_gap"] = merged_df.apply(lambda row: row["slayer"] - row["slayerReq"], axis=1)
     return merged_df
 
