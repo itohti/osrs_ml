@@ -14,15 +14,15 @@ AWAKENED_TASKS = [
 
 
 def preprocess(users_df, tasks_df):
-    # users_df.to_csv('./saved_data/users.csv')
-    # tasks_df.to_csv('./saved_data/tasks.csv')
+    # users_df.to_csv('./saved_data/users.csv', index=False)
+    # tasks_df.to_csv('./saved_data/tasks.csv', index=False)
 
     convert_comp_percentage(tasks_df)
     convert_string_to_dict(users_df)
     task_to_users = relate_user_to_task(tasks_df, users_df)
-    task_to_users.to_csv("./saved_data/tasks_to_users.csv")
+    task_to_users.to_csv("./saved_data/tasks_to_users.csv", index=False)
     merged_df = task_to_users.merge(tasks_df, left_on='task_name', right_on='name', how='left')
-    merged_df = merged_df.drop(columns=["Unnamed: 0"], errors='ignore')
+    merged_df = merged_df.drop(columns="name", errors='ignore')
     merged_df.to_csv("./saved_data/merged_df.csv", index=False)
 
 
@@ -122,7 +122,7 @@ def perfect_mechanical_stamina_feature(merged_df):
     
     perfect_mechanical_tasks = merged_df[is_relevant]
 
-    tasks_to_comp = dict(zip(perfect_mechanical_tasks["name"], perfect_mechanical_tasks["comp"]))
+    tasks_to_comp = dict(zip(perfect_mechanical_tasks["task_name"], perfect_mechanical_tasks["comp"]))
 
     def compute_readiness(row):
         task_name = row["task_name"]
@@ -136,7 +136,7 @@ def perfect_mechanical_stamina_feature(merged_df):
 def kills_feature(merged_df):
     kill_counts_tasks = merged_df.loc[merged_df["type"] == "Kill Count"]
 
-    kill_counts_description = dict(zip(kill_counts_tasks["name"], kill_counts_tasks["description"]))
+    kill_counts_description = dict(zip(kill_counts_tasks["task_name"], kill_counts_tasks["description"]))
 
     def compute_kills_remaining(row):
         task_name = row["task_name"]
@@ -180,7 +180,7 @@ def kills_feature(merged_df):
 
 def speed_feature(merged_df):
     speed_running_tasks = merged_df.loc[merged_df["type"] == "Speed"]
-    speed_running_description = dict(zip(speed_running_tasks["name"], speed_running_tasks["description"]))
+    speed_running_description = dict(zip(speed_running_tasks["task_name"], speed_running_tasks["description"]))
 
     def compute_seconds_to_save(row):
         task_name = row["task_name"]
