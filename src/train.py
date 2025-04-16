@@ -61,7 +61,7 @@ def classification_model(player_name=None):
     for feature, weight in zip(features, model.feature_importance()):
         print(f"{feature}: {weight:.4f}")
 
-    
+    model.save_model("./models/lgbm_model_v1.txt")
 
 def get_points(player_name: str):
     df = pd.read_csv("./saved_data/merged_df.csv")
