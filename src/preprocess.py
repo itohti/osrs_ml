@@ -41,9 +41,8 @@ def convert_comp_percentage(tasks_df):
     tasks_df["comp"] = tasks_df["comp"].str.rstrip('%').astype(float) / 100
 
 def convert_string_to_dict(users_df):
-    users_df['boss_info'] = users_df['boss_info'].apply(ast.literal_eval)
-    users_df['combat_stats'] = users_df['combat_stats'].apply(ast.literal_eval)
-    users_df['tasks'] = users_df['tasks'].apply(ast.literal_eval)
+    for col in ["boss_info", "combat_stats", "tasks"]:
+        users_df[col] = users_df[col].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
 
 def relate_user_to_task(tasks_df, users_df):
     users_related_tasks = {"task_name": [], "display_name": [], "attack": [], "defence": [], "strength": [], "hitpoints": [], "ranged": [], "magic": [], "slayer": [], "prayer": [], "boss_kc": [], "ehb": [], "pb": [], "done": []}  
