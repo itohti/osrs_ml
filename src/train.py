@@ -33,7 +33,7 @@ def classification_model(player_name=None):
     df["could_complete_score"] = model.predict_proba(X)[:, 1]
 
     # save it so recommend_tasks_by_score and use it.
-    df.to_csv("./saved_data/featured_merged_df.csv")
+    df.to_csv("./saved_data/featured_merged_df.csv", index=False)
 
     for feature, weight in zip(features, model.coef_[0]):
         print(f"{feature}: {weight:.4f}")
