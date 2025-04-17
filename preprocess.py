@@ -20,10 +20,9 @@ def preprocess(users_df, tasks_df):
     convert_comp_percentage(tasks_df)
     convert_string_to_dict(users_df)
     task_to_users = relate_user_to_task(tasks_df, users_df)
-    task_to_users.to_csv("./saved_data/tasks_to_users.csv", index=False)
     merged_df = task_to_users.merge(tasks_df, left_on='task_name', right_on='name', how='left')
     merged_df = merged_df.drop(columns="name", errors='ignore')
-    merged_df.to_csv("./saved_data/merged_df.csv", index=False)
+    return merged_df
 
 
 def feature_engineering(merged_df):
@@ -35,6 +34,8 @@ def feature_engineering(merged_df):
     merged_df["time_to_kill"] = merged_df.apply(lambda row: row["ehb"] / (row["boss_kc"] + 0.00001), axis=1)
     merged_df["time_to_completion"] = merged_df.apply(lambda row: row["time_to_kill"] * row["kills_remaining"], axis=1)
     merged_df["slayer_gap"] = merged_df.apply(lambda row: row["slayer"] - row["slayerReq"], axis=1)
+    merged_df["done"] = merged_df["done"].astype(bool).astype(int)
+    merged_df["readiness"] = merged_df["readiness"].fillna(0)
     return merged_df
 
 def convert_comp_percentage(tasks_df):
