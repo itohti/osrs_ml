@@ -7,15 +7,12 @@ from sklearn.preprocessing import MinMaxScaler
 import lightgbm as lgb
 import numpy as np
 
-def classification_model(player_name=None):
-    df = pd.read_csv("./saved_data/merged_df.csv")
+def classification_model(df: pd.DataFrame, player_name=None):
     df = preprocess.feature_engineering(df)
 
     # Prep labels.
     df["done"] = df["done"].astype(bool).astype(int)
     df["readiness"] = df["readiness"].fillna(0)
-
-    original_df = df.copy()
 
     df = pd.get_dummies(df, columns=["task_name", "type"])
     df.columns = df.columns.str.replace('[^A-Za-z0-9_]+', '_', regex=True)
@@ -52,11 +49,6 @@ def classification_model(player_name=None):
     # y_preds = (y_probs >= 0.5).astype(int)
 
     # print(classification_report(y_test, y_preds))
-
-    original_df["could_complete_score"] = model.predict(X)
-
-    # save it so recommend_tasks_by_score and use it.
-    original_df.to_csv("./saved_data/featured_merged_df.csv", index=False)
 
     for feature, weight in zip(features, model.feature_importance()):
         print(f"{feature}: {weight:.4f}")
