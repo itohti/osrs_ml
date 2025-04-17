@@ -62,3 +62,48 @@ def get_data():
     task_df = pd.DataFrame(tasks)
 
     return users_df, task_df
+
+def get_data_by_user(user: str):
+    init_firestore()
+    db = firestore.client()
+
+    all_users_data = []
+
+    user_ref = db.collection('users').document(user).stream()
+    user_data = user_ref.to_dict()
+    display_name = user_data.get("display_name")
+
+    boss_kc = db.collection("users").document(display_name).collection("boss_info").stream()
+    boss_info_data = {}
+    for doc in boss_kc:
+        boss_info_data[doc.id] = doc.to_dict()
+
+    boss_info_data = flatten_data(boss_info_data)
+
+    combat_stats = db.collection("users").document(display_name).collection("combat_stats").stream()
+    combat_stats_info = {}
+    for doc in combat_stats:
+        combat_stats_info[doc.id] = doc.to_dict()
+
+    combat_stats_info = flatten_data(combat_stats_info)
+    
+    tasks = db.collection("users").document(display_name).collection("tasks").stream()
+    tasks_completed_info = {}
+    for doc in tasks:
+        tasks_completed_info[doc.id] = doc.to_dict()
+
+    tasks_completed_info = flatten_data(tasks_completed_info)
+
+    user_data["boss_info"] = boss_info_data
+    user_data["combat_stats"] = combat_stats_info
+    user_data["tasks"] = tasks_completed_info
+
+    all_users_data.append(user_data)
+
+    tasks = [doc.to_dict() for doc in db.collection('tasks').stream()]
+
+    users_df = pd.DataFrame(all_users_data)
+
+    task_df = pd.DataFrame(tasks)
+
+    return users_df, task_df
