@@ -83,9 +83,11 @@ def get_data_by_user(user: str):
     combat_stats = db.collection("users").document(display_name).collection("combat_stats").stream()
     combat_stats_info = {}
     for doc in combat_stats:
-        combat_stats_info[doc.id] = doc.to_dict()
-
-    combat_stats_info = flatten_data(combat_stats_info)
+        skill_doc = doc.to_dict()
+        skill_name = skill_doc.get("skill_name")
+        level = skill_doc.get("level")
+        if skill_name and level is not None:
+            combat_stats_info[f"combat_{skill_name}"] = level
     
     tasks = db.collection("users").document(display_name).collection("tasks").stream()
     tasks_completed_info = {}
