@@ -106,9 +106,9 @@ def relate_user_to_task(tasks_df, users_df):
 
             users_related_tasks["display_name"].append(user["display_name"])
 
-            for stat_key, stat_value in user["combat_stats"].items():
-                stat_name = stat_key.split("_")[0].lower()
-                users_related_tasks[stat_name].append(stat_value)
+            for stat in ["attack", "defence", "strength", "hitpoints", "ranged", "magic", "slayer", "prayer"]:
+                value = user["combat_stats"].get(f"combat_{stat}", 0)
+                users_related_tasks[stat].append(value)
 
     df = pd.DataFrame(users_related_tasks)
     return df
