@@ -12,11 +12,7 @@ AWAKENED_TASKS = [
     "Vardorvis Sleeper"
 ]
 
-
 def preprocess(users_df, tasks_df):
-    # users_df.to_csv('./saved_data/users.csv', index=False)
-    # tasks_df.to_csv('./saved_data/tasks.csv', index=False)
-
     convert_comp_percentage(tasks_df)
     convert_string_to_dict(users_df)
     task_to_users = relate_user_to_task(tasks_df, users_df)
@@ -24,9 +20,7 @@ def preprocess(users_df, tasks_df):
     merged_df = merged_df.drop(columns="name", errors='ignore')
     return merged_df
 
-
 def feature_engineering(merged_df):
-    # kills remaining feature
     merged_df = kills_feature(merged_df)
     merged_df = speed_feature(merged_df)
     merged_df = perfect_mechanical_stamina_feature(merged_df)
@@ -46,7 +40,10 @@ def convert_string_to_dict(users_df):
         users_df[col] = users_df[col].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
 
 def relate_user_to_task(tasks_df, users_df):
-    users_related_tasks = {"task_name": [], "display_name": [], "attack": [], "defence": [], "strength": [], "hitpoints": [], "ranged": [], "magic": [], "slayer": [], "prayer": [], "boss_kc": [], "ehb": [], "pb": [], "done": []}  
+    users_related_tasks = {
+        "task_name": [], "display_name": [], "attack": [], "defence": [], "strength": [], "hitpoints": [],
+        "ranged": [], "magic": [], "slayer": [], "prayer": [], "boss_kc": [], "ehb": [], "pb": [], "done": []
+    }
 
     for _, user in users_df.iterrows():
         for task_key in user["tasks"].keys():
@@ -61,7 +58,6 @@ def relate_user_to_task(tasks_df, users_df):
                 cleaned = [word.replace("'", "").replace(":", "").capitalize() for word in format_monster_name]
                 formatted_name = " ".join(cleaned)
 
-                # Boss name mappings
                 boss_name_mappings = {
                     "Corrupted Hunllef": "The Corrupted Gauntlet",
                     "Crystalline Hunllef": "The Gauntlet",
@@ -73,25 +69,22 @@ def relate_user_to_task(tasks_df, users_df):
                     "Theatre Of Blood Entry Mode": "Theatre Of Blood"
                 }
 
-                # Apply boss name mapping if exists
                 formatted_name = boss_name_mappings.get(formatted_name, formatted_name)
                 kc_query = f"{formatted_name}_kc"
                 ehb_query = f"{formatted_name}_ehb"
                 pb_query = f"{formatted_name}_pb"
                 kc = user["boss_info"].get(kc_query, -2)
-                # if we successfully got the kc back and if its -1 that means the user did 0 kills.
-                if (kc == -1):
+                if kc == -1:
                     kc = 0
                 ehb = user["boss_info"].get(ehb_query, 0)
                 pb = user["boss_info"].get(pb_query, -1)
 
-                # -2 will indicate that the monster is an npc thus no kc can be recorded on it.
                 if kc == -2 and ehb == 0:
                     formatted_name = f"The {formatted_name}"
                     kc = user["boss_info"].get(f"{formatted_name}_kc", -2)
-                    if (kc == -1):
+                    if kc == -1:
                         kc = 0
-                    elif (kc == -2):
+                    elif kc == -2:
                         kc = -1
                     ehb = user["boss_info"].get(f"{formatted_name}_ehb", 0)
                     pb = user["boss_info"].get(f"{formatted_name}_pb", -1)
